@@ -77,9 +77,10 @@
                 <div class="wrap-box">
                     <ul class="img-list">
                         <li v-for="itemSon in item.datas" :key="itemSon.artID">
-                            <a href="#/site/goodsinfo/87" class="">
+                            <router-link :to="'detail/'+itemSon.artID">
                                 <div class="img-box">
-                                    <img :src="itemSon.img_url">
+                                    <!-- 懒加载要替换 :src="itemSon.img_url"-->
+                                    <img v-lazy="itemSon.img_url" >
                                 </div>
                                 <div class="info">
                                     <h3>{{itemSon.artTitle}}</h3>
@@ -92,7 +93,7 @@
                                         </span>
                                     </p>
                                 </div>
-                            </a>
+                            </router-link>
                         </li>
                     </ul>
                 </div>
@@ -105,7 +106,6 @@
 //导包
 import axios from "axios";
 
-import moment from 'moment';
 
 
 export default {
@@ -115,12 +115,12 @@ export default {
       catelist: [], //购物商场
       sliderlist: [], //轮播图
       toplist: [], //右侧栏
-      groupDate:[]
+      groupDate: []
     };
   },
   //创建之后
   created: function() {
-      //顶部数据
+    //顶部数据
     axios.get("http://47.106.148.205:8899/site/goods/gettopdata/goods")
       .then(result => {
         //    console.log(result);
@@ -129,28 +129,26 @@ export default {
         this.toplist = result.data.message.toplist;
       });
 
-        //底部数据
-        axios.get('http://47.106.148.205:8899/site/goods/getgoodsgroup')
-        .then(result=>{
-            this.groupDate= result.data.message;
-            
-        });
+    //底部数据
+    axios.get("http://47.106.148.205:8899/site/goods/getgoodsgroup")
+      .then(result => {
+        this.groupDate = result.data.message;
+      });
   },
   //筛选
-  filters: {
-    capitalize: function(value) {
-      return moment(value).format('YYYY年MM月DD日');
-    }   
-  }
+//   filters: {
+//     capitalize: function(value) {
+//       return moment(value).format("YYYY年MM月DD日");
+//     }
+//   }
 };
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-.el-carousel img{
-    width: 100%;
-    height: 100%;
-    display: block;
+.el-carousel img {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
- 
 </style>
