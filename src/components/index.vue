@@ -103,9 +103,6 @@
 </template>
 
 <script>
-//导包
-import axios from "axios";
-
 
 
 export default {
@@ -121,7 +118,7 @@ export default {
   //创建之后
   created: function() {
     //顶部数据
-    axios.get("http://47.106.148.205:8899/site/goods/gettopdata/goods")
+    this.$axios.get("/site/goods/gettopdata/goods")
       .then(result => {
         //    console.log(result);
         this.catelist = result.data.message.catelist;
@@ -130,7 +127,7 @@ export default {
       });
 
     //底部数据
-    axios.get("http://47.106.148.205:8899/site/goods/getgoodsgroup")
+    this.$axios.get("/site/goods/getgoodsgroup")
       .then(result => {
         this.groupDate = result.data.message;
       });

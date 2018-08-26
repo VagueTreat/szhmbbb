@@ -13,7 +13,10 @@
                 <div class="wrap-box">
                     <div class="left-925">
                         <div class="goods-box clearfix">
-                            <div class="pic-box"></div>
+                            <div class="pic-box">
+                                <ProductZoomer v-if="images.normal_size.length!=0" :base-images = "images" :base-zoomer-options="zoomerOptions">
+                                </ProductZoomer>
+                            </div>
                             <div class="goods-spec">
                                 <h1>{{goodsinfo.title}}</h1>
                                 <p class="subtitle">{{goodsinfo.sub_title}}</p>
@@ -52,7 +55,7 @@
                                         <dd>
                                             <div id="buyButton" class="btn-buy">
                                                 <button onclick="cartAdd(this,'/',1,'/shopping.html');" class="buy">立即购买</button>
-                                                <button onclick="cartAdd(this,'/',0,'/cart.html');" class="add">加入购物车</button>
+                                                <button @click="cartAdd" class="add" id="add">加入购物车</button>
                                             </div>
                                         </dd>
                                     </dl>
@@ -83,48 +86,32 @@
                                         </div>
                                         <div class="conn-box">
                                             <div class="editor">
-                                                <textarea id="txtContent" name="txtContent" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
+                                                <textarea id="txtContent" name="txtContent" v-model.trim="commentInfo" sucmsg=" " datatype="*10-1000" nullmsg="请填写评论内容！"></textarea>
                                                 <span class="Validform_checktip"></span>
                                             </div>
                                             <div class="subcon">
-                                                <input id="btnSubmit" name="submit" type="submit" value="提交评论" class="submit">
+                                                <input id="btnSubmit" name="submit" type="submit" @click="submitClick" value="提交评论" class="submit">
                                                 <span class="Validform_checktip"></span>
                                             </div>
                                         </div>
                                     </div>
                                     <ul id="commentList" class="list-box">
-                                        <p style="margin: 5px 0px 15px 69px; line-height: 42px; text-align: center; border: 1px solid rgb(247, 247, 247);">暂无评论，快来抢沙发吧！</p>
-                                        <li>
+                                        <p v-show="comment.length==0" style="margin: 5px 0px 15px 69px; line-height: 42px; text-align: center; border: 1px solid rgb(247, 247, 247);">暂无评论，快来抢沙发吧！</p>
+                                        <li v-for="item in comment" :key="item.id">
                                             <div class="avatar-box">
                                                 <i class="iconfont icon-user-full"></i>
                                             </div>
                                             <div class="inner-box">
                                                 <div class="info">
-                                                    <span>匿名用户</span>
-                                                    <span>2017/10/23 14:58:59</span>
+                                                    <span>{{item.user_name}}</span>
+                                                    <span>{{item.add_time | capitalize}}</span>
                                                 </div>
-                                                <p>testtesttest</p>
-                                            </div>
-                                        </li>
-                                        <li>
-                                            <div class="avatar-box">
-                                                <i class="iconfont icon-user-full"></i>
-                                            </div>
-                                            <div class="inner-box">
-                                                <div class="info">
-                                                    <span>匿名用户</span>
-                                                    <span>2017/10/23 14:59:36</span>
-                                                </div>
-                                                <p>很清晰调动单很清晰调动单</p>
+                                                <p>{{item.content}}</p>
                                             </div>
                                         </li>
                                     </ul>
                                     <div class="page-box" style="margin: 5px 0px 0px 62px;">
-                                        <div id="pagination" class="digg">
-                                            <span class="disabled">« 上一页</span>
-                                            <span class="current">1</span>
-                                            <span class="disabled">下一页 »</span>
-                                        </div>
+                                        <Page :total="totalCount" @on-change='pageCount' @on-page-size-change='pagesizeCount' show-elevator show-sizer placement="top" :page-size-opts="[5, 6, 8, 10]"/>
                                     </div>
                                 </div>
                             </div>
@@ -137,12 +124,12 @@
                                 <ul class="side-img-list">
                                     <li v-for="item in hotgoodslist" :key="item.id">
                                         <div class="img-box">
-                                            <a href="#/site/goodsinfo/90" class="">
+                                            <router-link :to="'/detail/'+item.id">
                                                 <img :src="item.img_url">
-                                            </a>
+                                            </router-link>
                                         </div>
                                         <div class="txt-box">
-                                            <a href="#/site/goodsinfo/90" class="">{{item.title}}</a>
+                                            <router-link :to="'/detail/'+item.id">{{item.title}}</router-link>
                                             <span>{{item.add_time | capitalize}}</span>
                                         </div>
                                     </li>
@@ -155,12 +142,14 @@
         </div>
         <!-- 回到顶部 iview -->
         <BackTop></BackTop>
+        <!-- 动画图片 如果数据还们没有请求过来就先不显示img-->
+        <img :src="imglist[0].original_path" class="moveImg" v-if="imglist.length != 0" alt="">
     </div>
 </template>
 
 <script>
-//引入axios
-import axios from "axios";
+//引入jQuery
+import $ from 'jquery';
 export default {
   //姓名
   name: "detail",
@@ -171,35 +160,168 @@ export default {
       hotgoodslist: [],
       imglist: [],
       buyCount: "",
-      showDisuess: false
+      showDisuess: false,
+      //放大镜
+      images: {
+        normal_size: []
+      },
+      zoomerOptions: {
+        zoomFactor: 4,
+        pane: "container-round",
+        hoverDelay: 300,
+        namespace: "zoomer",
+        move_by_click: true,
+        scroll_items: 4,
+        choosed_thumb_border_color: "#ff3d00"
+      },
+      pageNum : 1,
+      pageSizeNum : 10,
+      comment:[],
+      totalCount:0,
+      commentInfo:'',  //评论内容
+
     };
   },
   methods: {
     handleChange() {
       console.log("点击啦");
+    },
+    gotoDetail(){
+      this.productId = this.$route.params.id;
+      //发起请求
+      this.$axios
+        .get(
+          `/site/goods/getgoodsinfo/${this.productId}`
+        )
+        .then(result => {
+          // console.log(result);
+          this.goodsinfo = result.data.message.goodsinfo;
+          this.hotgoodslist = result.data.message.hotgoodslist;
+          this.imglist = result.data.message.imglist;
+
+          let tem = [];
+          this.imglist.forEach((v, i) => {
+            tem.push({
+              id: v.id,
+              url: v.original_path
+            });
+          });
+          this.images.normal_size = tem;
+        });
+    },
+    //获取评论的数据
+    getComments(){
+        this.$axios.get(`/site/comment/getbypage/goods/${this.productId}?pageIndex=${this.pageNum}&pageSize=${this.pageSizeNum}`)
+        .then(result=>{
+            // console.log(result);
+            
+            this.comment = result.data.message;
+            this.totalCount = result.data.totalcount;
+        })
+    },
+    //分页页码
+    pageCount(page){
+        this.pageNum = page;
+        this.getComments()
+    },
+    //分页
+    pagesizeCount(pagesize){
+        this.pageSizeNum = pagesize;
+        if(this.pageNum == 1){
+            this.getComments();
+        } 
+    },
+    //提交评论
+    submitClick(){
+        //如果评论的内容为空就弹出这个
+        if(this.commentInfo==''){
+            this.$Message.warning('请输入评论内容');
+        }else{
+            this.$axios.post(`/site/validate/comment/post/goods/${this.productId}`,{
+            "commenttxt":this.commentInfo  
+         }).then(result=>{
+             this.$Message.success(result.data.message);
+             this.getComments();
+             this.commentInfo='';
+         })
+        }
+
+    },
+    //添加到购物车
+    cartAdd(){
+        //获取加入购物车的坐标
+        var carCoord = $('#add').offset();
+        
+        //获取购物车坐标
+        var shoppingCoord = $('.icon-cart').offset();
+         
+        //让图片显示并且加上动画
+        $('.moveImg').css(carCoord).show().animate(shoppingCoord,function () { 
+            $(this).hide()
+         })
     }
   },
   created: function() {
-    this.productId = this.$route.params.id;
-    //发起请求
-    axios
-      .get(
-        `http://47.106.148.205:8899/site/goods/getgoodsinfo/${this.productId}`
-      )
-      .then(result => {
-        // console.log(result);
-        this.goodsinfo = result.data.message.goodsinfo;
-        this.hotgoodslist = result.data.message.hotgoodslist;
-        this.imglist = result.data.message.imglist;
-      });
+      this.gotoDetail();
+
+      this.getComments();
+  },
+  watch:{
+      $route(val,oldVal){
+          this.images.normal_size=[];
+          this.gotoDetail();
+      }
   }
 };
 </script>
 
-<style>
+<style lang='less'>
 .tab-content img {
   width: 100%;
   display: block;
 }
+.tab-content img {
+  width: 100%;
+  /* 去除图片底部的 间隙 */
+  display: block;
+}
+/* iview的回到顶部 */
+.top {
+  padding: 10px;
+  background: rgba(0, 153, 229, 0.7);
+  color: #fff;
+  text-align: center;
+  border-radius: 2px;
+}
+/* 放大镜相关样式 */
+.pic-box {
+  width: 395px;
+  .control-box .thumb-list {
+    display: flex;
+    justify-content: center;
+    img {
+      width: 80px;
+      height: 80px;
+      margin: 2px;
+    }
+  }
+  .control {
+    //   text-align:center;
+    display: flex;
+    // 主轴
+    justify-content: center;
+    // 纵轴 副轴 侧轴
+    align-items: center;
+  }
+  
+}
+//设置要移动图片的样式
+.moveImg{
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      left: 0;
+      top: 0;
+  }
 </style>
 

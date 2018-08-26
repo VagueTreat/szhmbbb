@@ -14,6 +14,18 @@ import ElementUI from 'element-ui';
 //輪播圖插件的樣式
 import 'element-ui/lib/theme-chalk/index.css';
 
+//导入axios
+import axios from 'axios';
+//修改基地址
+axios.defaults.baseURL = 'http://47.106.148.205:8899';
+//添加到vue的原型
+Vue.prototype.$axios = axios;
+
+//放大镜的插件
+import ProductZoomer from 'vue-product-zoomer';
+
+Vue.use(ProductZoomer);
+
 //引入固定顶部插件，iview
 import iView from 'iview';
 import 'iview/dist/styles/iview.css';
