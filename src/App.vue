@@ -10,23 +10,24 @@
                     <a target="_blank" href="#"></a>
                 </div>
                 <div id="menu" class="right-box">
-                    <span style="display: none;">
-                        <a href="" class="">登录</a>
+                    <span v-show="this.$store.state.isLogin == false">
+                        <router-link to="/login"> 登录</router-link>
                         <strong>|</strong>
                         <a href="" class="">注册</a>
                         <strong>|</strong>
                     </span>
-                    <span>
-                        <a href="" class="">会员中心</a>
+                    <span v-show="this.$store.state.isLogin == true">
+                        <router-link to="/userCenter">会员中心</router-link>
                         <strong>|</strong>
-                        <a>退出</a>
+                        <a @click="loginOut">退出</a>
                         <strong>|</strong>
                     </span>
-                    <a href="" class="">
+                    <router-link to="/cart">
                         <i class="iconfont icon-cart"></i>购物车(
                         <span id="shoppingCartCount">
-                            <span>4</span>
-                        </span>)</a>
+                            <span>{{$store.getters.cartNum}}</span>
+                        </span>)
+                    </router-link>
                 </div>
             </div>
         </div>
@@ -116,7 +117,7 @@
                     </div>
                 </div>
             </div>
-
+        
   </div>
   </template>
 
@@ -124,7 +125,19 @@
 import $ from 'jquery';
 
 export default {
-  name: "app"
+  name: "app",
+  methods:{
+      //退出登陆要执行的函数
+      loginOut(){
+          this.$axios.get('site/account/logout').then(result=>{
+              if(result.data.message == "用户已注销"){
+                  this.$store.commit('isOrLogin',false);
+                  this.$router.push('/login');
+              }
+              
+          })
+      }
+  }
 };
 $(document).ready(function() {
   $("#menu2 li a").wrapInner('<span class="out"></span>');

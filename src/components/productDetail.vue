@@ -184,7 +184,7 @@ export default {
   },
   methods: {
     handleChange() {
-      console.log("点击啦");
+    //   console.log("点击啦");
     },
     gotoDetail(){
       this.productId = this.$route.params.id;
@@ -200,7 +200,7 @@ export default {
           this.imglist = result.data.message.imglist;
 
           let tem = [];
-          this.imglist.forEach((v, i) => {
+          this.imglist.forEach(v => {
             tem.push({
               id: v.id,
               url: v.original_path
@@ -249,6 +249,10 @@ export default {
     },
     //添加到购物车
     cartAdd(){
+        if(this.buyCount == 0){
+            this.$Message.error('买点呗')
+            return
+        }
         //获取加入购物车的坐标
         var carCoord = $('#add').offset();
         
@@ -256,9 +260,15 @@ export default {
         var shoppingCoord = $('.icon-cart').offset();
          
         //让图片显示并且加上动画
-        $('.moveImg').css(carCoord).show().animate(shoppingCoord,function () { 
-            $(this).hide()
+        $('.moveImg').stop().show().addClass('move').css(carCoord).animate(shoppingCoord,function () { 
+            $(this).hide().removeClass('move');
          })
+
+        //  this.$store.commit('increment',1);
+        this.$store.commit('addcommint',{
+            goodsId:this.productId,
+            goodsNum:this.buyCount
+        })
     }
   },
   created: function() {
@@ -267,7 +277,7 @@ export default {
       this.getComments();
   },
   watch:{
-      $route(val,oldVal){
+      $route(){
           this.images.normal_size=[];
           this.gotoDetail();
       }
@@ -320,8 +330,11 @@ export default {
       position: absolute;
       width: 50px;
       height: 50px;
-      left: 0;
-      top: 0;
   }
+.moveImg.move{
+    transition: transform 2s,opacity 1s;
+    transform: scale(.2) rotate(7200deg);
+    opacity: .2;
+}
 </style>
 
